@@ -1,12 +1,14 @@
+
+#include <cstdlib>
+#include <ctime>
 #include <iostream>
-#include <stdlib.h>
-#include <time.h> 
 
-int main(void)
-{
-srand((unsigned)time(NULL)); 
-for(int i = 0; i < 100;i++ ) 
-    std::cout << rand() / double(RAND_MAX) << std::endl;
-return 0;
+int main() {
+  const double radius_a = 2;
+  double radius;
+  std::srand((unsigned)time(NULL));
+  for (int i = 0; i < 100; ++i) {
+    radius = radius_a + 2.0 * std::rand() / double(RAND_MAX);
+    std::cout << radius << std::endl;
+  }
 }
-
