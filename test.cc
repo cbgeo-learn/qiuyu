@@ -1,61 +1,54 @@
-#include<cstdlib>
+#include <cstdlib>
 #include <iostream>
 
-    using namespace std;
+class Matrix {
+public:
+  Matrix(int rows, int cols);
+  void data();
+  void printMatrix();
 
-class Matri {
-  public:
-  matri();
-  matri(int m, int n);
-  void rows(int argc, char *argv[]);
-  void columns(int argc, char *argv[]);
-  void printMatri();
-}
-Matri:matri() :Matri(1,1){}
+private:
+  int rows_;
+  int cols_;
+};
 
-Matri::rows(int argc,char *argv[]){
-   cout<<"the number of rows and columns" << endl;
-   int r;
-   if(argc == 3)
-     r = atoi(argv[1]);
-   else
-     cout<<"Incorrect input"<<endl;
-  return r;
-}
-
-Matri::columns(int argc,char *argv[]){
-   int c;
-   if(argc ==3 )
-     c = atoi (argv[2])
-    return c;
-
+Matrix::Matrix(int rows, int cols) {
+  rows_ = rows;
+  cols_ = cols;
+  double **data;
+  data = new double *[rows_];
+  for (int i = 0; i < rows_; ++i) {
+    data[i] = new double[cols_];
+  }
 }
 
-Matri:matrix(int m, int n)
-{
-  int p[m][n];
-  for(int i = 0; i < m; ++i)
-  {
-for:(int j = 0; j < n; ++j)
-    {
-      p[i][j] = 0;
-    }
+void Matrix::data() {
+  double **data;
+  for (int i = 0; i < rows_; ++i) {
+    for (int j = 0; j < cols_; ++j)
+      std::cin >> data[i][j];
+  }
+
+
+void Matrix::printMatrix() {
+  double **data;
+  for (int i = 0; i < rows_; ++i) {
+    for (int j = 0; j < cols_; ++j)
+      std::cout << data[i][j] << " ";
+    std::cout << '\n';
   }
 }
 
 int main() {
-  Matri Trial;
-  int a,b;
-  a = Matri::rows();
-  b = Matri::columns();
-  int T[a][b];
-  for(int i = 0; i < a; ++i)
-  {for(int j = 0; j < b; ++j)
-    {
-      int num;
-      std::cin >>num;
-      T[i][j]=num;
-    }
-    Trial.printMatri();
-
-}
+  Matrix a = Matrix(5, 3);
+  a.data();
+  a.printMatrix();
+  Matrix b = Matrix(5, 3);
+  b.data();
+  b.printMatrix();
+  double **c=new double*[5];
+  for (int i = 0; i < 5; ++i) {
+    for (int j = 0; j < 3; ++j)
+      c[i][j] = a.data[i][j] + b.data[i][j];
+  }
+i}
