@@ -11,15 +11,9 @@ class Shape {
   Shape(std::string name) : name_{name} {}
   std::string name() { return name_;}
 
-  double area(double r) {
-    radius_=r;
-    area_= PI*radius_*radius_;
-    return area_;
-    }
-    
-    double area(double m,double n) {
-    width_=m;
-    height_=n;
+    virtual double area() {
+    std::cin>>width_;
+    std::cin>>height_;
     area_= width_*height_;
     return area_;
     }
@@ -36,6 +30,12 @@ class Shape {
 class Circle : public Shape {
   public:
     Circle(std::string name) : Shape(name) {}
+  
+    double area() {
+    std::cin>>radius_;
+    area_= PI*radius_*radius_;
+    return area_;
+    }
 
     void print() { 
       std::cout << name_ << std::endl;
@@ -82,22 +82,16 @@ class  Ellipse : public Shape {
 
 int main() {
   Circle cc = Circle("Circle");
-  double a;
-  std::cin>>a;
-  cc.area(a);
-  cc.print();
-
-
-  double m,n;
-  std::cin>>m>>n;
   Triangle tt = Triangle("Triangle");
   Rectangle rr = Rectangle("Rectangle");
   Ellipse ee=Ellipse("Ellipse");
-  tt.area(m,n);
+  cc.area();
+  cc.print();
+  tt.area();
   tt.print();
-  rr.area(m,n);
+  rr.area();
   rr.print();
-  ee.area(m,n);
+  ee.area();
   ee.print();
 
 
