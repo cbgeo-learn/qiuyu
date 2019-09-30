@@ -1,98 +1,85 @@
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include<cmath>
-#include <cstdlib>
-
-#define PI acos(-1)
-
 
 class Shape {
   public:
-  Shape(std::string name) : name_{name} {}
-  std::string name() { return name_;}
+  Shape(const std::string& name) : name_{name} {}
+  const std::string& name() { return name_;}
 
-    virtual double area() {
-    std::cin>>width_;
-    std::cin>>height_;
-    area_= width_*height_;
-    return area_;
-    }
+    virtual double area() =0;
+    
 
   protected:
     std::string name_;
-    double width_;
-    double height_;
-    double radius_;
     double area_;
 
 };
 
 class Circle : public Shape {
   public:
-    Circle(std::string name) : Shape(name) {}
+    Circle(const std::string& name,double radius) : Shape(name) {}
   
-    double area() {
+    double area() override{
     std::cin>>radius_;
-    area_= PI*radius_*radius_;
-    return area_;
+    return M_PI * std::pow(radius_,2);
     }
 
-    void print() { 
-      std::cout << name_ << std::endl;
-      std::cout << "Area: " << area_ << std::endl; }
   private:
      double radius_;
 };
 
 class Triangle : public Shape {
   public:
-     Triangle(std::string name) : Shape(name) {}
+     Triangle(const std::string& name,double width, double height) : Shape(name) {}
 
-    void print() { 
-      std::cout << name_ << std::endl;
-      std::cout << "Area: " << 0.5*area_ << std::endl; }
+   double area() override{
+    std::cin>>width_>>height_;
+    return 0.5*width_*height_;
+    }
+
   private:
      double width_;
      double height_;
 };
 
 class Rectangle : public Shape {
-  public:
-     Rectangle(std::string name) : Shape(name) {}
+ public:
+     Rectangle(const std::string& name,double width, double height) : Shape(name) {}
 
-    void print() { 
-      std::cout << name_ << std::endl;
-      std::cout << "Area: " << area_ << std::endl; }
+   double area() override{
+    std::cin>>width_>>height_;
+    return width_*height_;
+    }
+
   private:
      double width_;
      double height_;
 };
 
 class  Ellipse : public Shape {
-  public:
-     Ellipse(std::string name) : Shape(name) {}
+   public:
+   Ellipse(const std::string& name,double axisa,double axisb) : Shape(name) {}
+  
+    double area() override{
+    std::cin>> axisa_>>axisb_;
+    return M_PI*axisa_*axisb_;
+    }
 
-    void print() { 
-      std::cout << name_ << std::endl;
-      std::cout << "Area: " << PI*area_ << std::endl; }
   private:
-     double width_;
-     double height_;
+     double axisa_;
+     double axisb_;
 };
 
 int main() {
-  Circle cc = Circle("Circle");
-  Triangle tt = Triangle("Triangle");
-  Rectangle rr = Rectangle("Rectangle");
-  Ellipse ee=Ellipse("Ellipse");
-  cc.area();
-  cc.print();
-  tt.area();
-  tt.print();
-  rr.area();
-  rr.print();
-  ee.area();
-  ee.print();
 
-
+  Ellipse ee = Ellipse("Ellipse",5.0,6.0);
+  Rectangle rr = Rectangle("Rectangle",5.0,6.0);
+  Triangle tt = Triangle("Triangle",5.0,6.0);
+  Circle cc = Circle("Circle",5.0);
+  std::cout << "EllipseArea: " << ee.area() << std::endl;
+  std::cout << "RectangleArea: " << rr.area() << std::endl;
+  std::cout << "TriangleArea: " << tt.area() << std::endl;
+  std::cout << "CircleArea: " << cc.area() << std::endl;
 }
