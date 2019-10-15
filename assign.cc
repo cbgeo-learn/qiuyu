@@ -16,6 +16,7 @@ int main() {
   double ypost[number] = {0};
   std::string line;
   int i = 0;
+  while(i<number)
   if (infile.is_open())
   {  while (std::getline(infile, line)) {
       if (line != "") {
