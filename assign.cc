@@ -1,48 +1,86 @@
 #include <cstdlib>
+
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
+#include <iterator>
+#include <random>
 #include <sstream>
 #include <string>
+#include <vector>
 
-int main() {
+struct Point {
+  double x, y;
+  double r;
+};
 
+int main(int argc, char** argv) {
   std::ifstream infile("radius.txt");
   std::ofstream ofs("assign100.txt");
-  int rows = 100;
-  int cols = 100;
-  int number = rows * cols;
-  double radius[number] = {0};
-  double xpost[number] = {0};
-  double ypost[number] = {0};
-  std::string line;
-  int i = 0;
+
+  // Get length and height
+  double length = 20;
+  double height;
   
-    if (infile.is_open()) 
-      while (std::getline(infile, line)) {
-        if (line != "") {
-          std::istringstream istream(line);
-          istream >> radius[i];
-          i = i + 1;
-         if(i>number)
-           break;
-        }
+  // Should be input arguments
+  // This should be the length and width of the column
+  std::vector<double> radius;
+  
+  std::string line;
+
+  if (infile.is_open()) {
+    while (std::getline(infile, line)) {
+      if (line != "") {
+        std::istringstream istream(line);
+        double r;
+        istream >> r;
+        radius.emplace_back(r);
       }
+    }
+  }
   infile.close();
 
-  for (int i = 0; i < number; i = i + cols)
-    for (int j = 1; j < cols; ++j)
-      xpost[i + j] = xpost[j - 1] + radius[j] + radius[j - 1];
+  // Shuffles the vector of radius randomly
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::shuffle(radius.begin(), radius.end(), g);
 
-  for (int i = cols; i < number; i = i + cols)
-    for (int j = 0; j < cols; ++j)
-      ypost[i + j] =
-          ypost[i + j - cols] + radius[i + j - cols] + 2 * radius[i + j];
+  // Maximum radius
+  double max_radius = *(std::max_element(radius.begin(), radius.end()));
 
-  for (int i = 0; i < number; ++i)
-    if (ofs.is_open()) {
+  // Vector of points
+  std::vector<Point> points;
 
-      ofs << radius[i] << " " << xpost[i] << " " << ypost[i] << "\n";
+  double x = 0.;
+  double y = max_radius;
+
+  for (const auto& rad : radius) {
+    // Initial x value
+    x += rad;
+    // Individual points
+    Point p;
+    p.r = rad;
+    p.x = x;
+    p.y = y;
+
+    points.emplace_back(p);
+    
+    // Next start of x position
+    x += rad;
+
+    // Set new y, when the length is reached
+    if (x >= length) {
+      y += 2 * max_radius;
+      x = 0.;
     }
-  ofs.close();
+  }
 
-    }
+  
+  if (ofs.is_open()) {
+    for (auto point : points)
+      ofs << std::setprecision(5) << point.r << "\t" << std::setprecision(5)
+          << point.x << "\t" << std::setprecision(5) << point.y << "\n";
+    ofs.close();
+  }
+}
