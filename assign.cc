@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
   std::ofstream ofs("assign100.txt");
 
   // Get length and height
-  double length = 20;
+  double length = 500;
   double height;
   
   // Should be input arguments
@@ -83,4 +83,20 @@ int main(int argc, char** argv) {
           << point.x << "\t" << std::setprecision(5) << point.y << "\n";
     ofs.close();
   }
+
+
+  // Write the output to file
+  auto outfile1 = fopen("DEM.ps", "w");
+  fprintf(outfile1, "%%!PS-Adobe-3.0 EPSF-3.0 \n");
+  fprintf(outfile1, "%%%BoundingBox: %f %f %f %f \n", 0., 0., length+max_radius, y+max_radius);
+  fprintf(outfile1, "%%%Creator: Krishna Kumar \n");
+  fprintf(outfile1, "%%%Title: DEM Grains\n");
+  fprintf(outfile1, "0.1 setlinewidth 0.0 setgray \n");
+  for (auto point : points)
+    fprintf(outfile1,
+            "newpath %le %le %le 0.0 setlinewidth %.2f setgray 0 360 arc gsave "
+            "fill grestore\n",
+            point.x, point.y, point.r, 0.5);
+  fclose(outfile1);
+
 }
