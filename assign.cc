@@ -13,6 +13,8 @@
 struct Point {
   double x, y;
   double r;
+  int i;
+  // i is the number of line
 };
 
 int main(int argc, char** argv) {
@@ -36,6 +38,7 @@ int main(int argc, char** argv) {
         double r;
         istream >> r;
         radius.emplace_back(r);
+      
       }
     }
   }
@@ -54,6 +57,7 @@ int main(int argc, char** argv) {
 
   double x = 0.;
   double y = max_radius;
+  int i = 0;
 
   for (const auto& rad : radius) {
     // Initial x value
@@ -63,7 +67,7 @@ int main(int argc, char** argv) {
     p.r = rad;
     p.x = x;
     p.y = y;
-
+    p.i = i;
     points.emplace_back(p);
     
     // Next start of x position
@@ -72,14 +76,20 @@ int main(int argc, char** argv) {
     // Set new y, when the length is reached
     if (x >= length) {
       y += 2 * max_radius;
-      x = 0.;
+     //Make alternate lines more compact;
+     if(i%2==0)
+     x = 0.5*max_radius;
+     else
+     x = 0.;
+     i=i+1;
     }
   }
 
   
   if (ofs.is_open()) {
+    ofs<<std::setprecision(5)<<radius.size()<<"\n";
     for (auto point : points)
-      ofs << std::setprecision(5) << point.r << "\t" << std::setprecision(5)
+      ofs << std::setprecision(5)<< point.r << "\t" << std::setprecision(5)
           << point.x << "\t" << std::setprecision(5) << point.y << "\n";
     ofs.close();
   }
