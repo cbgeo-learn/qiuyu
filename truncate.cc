@@ -1,22 +1,20 @@
 #include <cstdlib>
-
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <iterator>
-#include <random>
 #include <sstream>
 #include <string>
 #include <vector>
 #include <cctype>
-#define a 0.8
+
 struct Point {
   double x,y,r;
-  //std::vector<double> y;
 };
 
 int main(int argc, char** argv) {
+  const double a = 0.8; //Aspect ratio I want;
   std::string inputfile, outputfile;
   if (argc == 3) {
     inputfile = argv[1];
@@ -27,52 +25,39 @@ int main(int argc, char** argv) {
   }
   std::ifstream infile(inputfile);
   std::ofstream ofs(outputfile);
-  std::vector<Point> points;
   std::string line;
- 
-  std::vector<std::string>vec;
+  double ignore;
+  double max_x = 0.;
+  double max_r = 0.;
+  
+   std::vector<Point> points;
   if (infile.is_open()) {
     while (std::getline(infile, line))
-      if(line!=""){
-      
-        std::string linesub = line.substr (0,50);
-        //   std::istringstream istream(line);
-        vec.emplace_back(linesub);
+      if(!line.empty()){
+        std::istringstream istream(line);
+        Point p;
+        istream>>ignore;
+        istream>>p.r>>p.x>>p.y;
+        istream>>ignore;
+         if(p.x>max_x)max_x=p.x;
+         if(p.r>max_r)max_r=p.r;
+        points.emplace_back(p);
+        
       }
     }
   
   infile.close();
  
-   double max_x = 0.;
-  for (auto it =vec.begin();it!=vec.end();it++)
-  {
-    std::istringstream pt(*it);
-    std::string s;
-    int pam = 0;
-    Point p;
-      
-     while(pt>>s)
-    {  
-      if(pam==1)
-        p.r=std::stod(s.c_str());
-      if(pam==2)
-        p.x=std::stod(s.c_str());
-        if(p.x>max_x)max_x=p.x;
-       if(pam==3)
-        p.y=std::stod(s.c_str());
-       pam++;
-         }
-      points.emplace_back(p);
-
+  if (ofs.is_open()) {
+          ofs <<std::setprecision(5)<<"MaxRadius:"<<1000*max_r<< "\t"\
+          << std::setprecision(5)<<"MaxHeight:"<<1000*a*max_x<< "\t"\
+          << std::setprecision(5)<<"MaxLength:"<<1000*max_x<<"\n";
+        
+       for (auto point : points)
+          if(point.y<=a*max_x)
+      ofs << std::setprecision(5)<< 1000*point.r << "\t" << std::setprecision(5)
+          << 1000*point.x << "\t" << std::setprecision(5) << 1000*point.y << "\n";
+    ofs.close();
   }
 
   
-  if (ofs.is_open()) {
- //  ofs<<std::setprecision(5)<<radius.size()<<"\n";
-    for (auto point : points)
-      if(point.y<=a*max_x)
-      ofs << std::setprecision(5)<< point.r << "\t" << std::setprecision(5)
-          << point.x << "\t" << std::setprecision(5) << point.y << "\n";
-    ofs.close();
-  }
-  }
