@@ -1,25 +1,27 @@
+#include <iostream>
 #include <algorithm>
-#include <cassert>
 #include <cstdlib>
 #include <ctime>
 #include <cuda.h>
-#include <iostream>
 #include <stdio.h>
+#include <cassert>
 
+//! Get the block id
 __device__ int block_idx(int grid_dim) {
   int block_id = blockIdx.x + (grid_dim == 2 ? 1 : 0) * blockIdx.y * gridDim.x +
                  (grid_dim == 3 ? 1 : 0) * blockIdx.z * gridDim.x * gridDim.y;
   return block_id;
 }
 
+//! Get the global thread id
 __device__ int thread_idx(int grid_dim, int block_dim) {
-  // ! thread id inside a block
+  // thread id inside a block
   unsigned long int threadIdInBlock =
       threadIdx.x + (block_dim == 2 ? 1 : 0) * threadIdx.y * blockDim.x +
       (block_dim == 3 ? 1 : 0) * threadIdx.z * blockDim.x * blockDim.z;
-  //! block id
+  // block id
   unsigned long int block_id = block_idx(grid_dim);
-  // ! block size
+  // block size
   unsigned long int threadsPerblock = blockDim.x *
                                       (block_dim == 2 ? blockDim.y : 1) *
                                       (block_dim == 3 ? blockDim.z : 1);
@@ -27,44 +29,59 @@ __device__ int thread_idx(int grid_dim, int block_dim) {
   return thread_id;
 }
 
-void show_array(int** array, int nbrows, int nbcols) {
+//! Get the transposed matrix
+__global__ void gpu_array_swap(int* ptr_gpu, int nbrows, int nbcols,
+                               int grid_dim, int block_dim) {
+  int thread_id = thread_idx(grid_dim, block_dim);
+  // check if the array is correct.
+  printf("%d %d\n", ptr_gpu[thread_id], thread_id);
+
+  // pass the matrix to shared memory
+  extern __shared__ int sdata[];
+  sdata[thread_id] = ptr_gpu[thread_id];
+
+  __syncthreads();
+  int row = floorf((thread_id + 1) / nbcols);
+  int col = thread_id + 1 - row * nbcols;
+  int swap_thread_id = col * nbcols + row - 1;
+  ptr_gpu[thread_id] = sdata[swap_thread_id];
+  printf("%d %d\n", ptr_gpu[thread_id], thread_id);
+}
+
+void print_array(int** array, int nbrows, int nbcols) {
   for (int i = 0; i < nbrows; ++i) {
-    for (int j = 0; j < nbcols; ++j) std::cout << array[i][j] << std::endl;
+    for (int j = 0; j < nbcols; ++j) {
+      std::cout << array[i][j] << "  ";
+      if (j == (nbcols - 1)) std::cout << std::endl;
+    }
   }
 }
 
-__global__ void gpu_array_swap(int** ptr_gpu, int nbrows, int nbcols,
-                               int grid_dim, int block_dim) {
-  int thread_id = thread_idx(grid_dim, block_dim);
-  int i = floorf((thread_id + 1) / nbcols);
-  int j = thread_id + 1 - i * nbcols;
-  // To test if kernel function runs
-  //(Fact:it runs)
-  printf("I am running!\n");
-  //__syncthreads();
-
-  // To see if ptr_gpu has been transferred
-  //(Fact: Not transferred in and the printf command below didn't run)
-  ptr_gpu[1][1] = 100;
-  printf("%d %d\n", ptr_gpu[1][1], ptr_gpu[i][j]);
-}
-
 int main() {
-  //! Declare a double pointer on the host
-  int **ptr_cpu = NULL, **ptr_gpu = NULL;
+  // declare a vector on the host
+  int **ptr_cpu = NULL, *ptr_gpu = NULL;
   const int nbcols = 4, nbrows = 5;
   int N = nbrows * nbcols;
+  int nbytes = N * sizeof(int);
   ptr_cpu = new int*[nbrows];
-  for (int i = 0; i < nbrows; i++) ptr_cpu[i] = new int[nbcols];
+  // for (int i = 0; i < nbrows; i++) ptr_cpu[i] = new int[nbcols];
+
+  // !The memory should be contiguous on the host
+  ptr_cpu[0] = (int*)malloc(nbytes);
+  // ptr_cpu[0]=new int[N];
+  for (int i = 1; i < nbrows; ++i) ptr_cpu[i] = ptr_cpu[i - 1] + nbcols;
 
   int k = 0;
   for (int i = 0; i < nbrows; ++i) {
     for (int j = 0; j < nbcols; ++j) ptr_cpu[i][j] = k++;
   };
+  print_array(ptr_cpu, nbrows, nbcols);
 
-  //! Allocate memory on GPU
-  cudaMalloc(&ptr_gpu, nbrows * sizeof(int*));
-  cudaMemcpy(ptr_gpu, ptr_cpu, nbrows * sizeof(int*), cudaMemcpyHostToDevice);
+  // allocate gpu memory
+  cudaMalloc(&ptr_gpu, nbytes);
+
+  // copy data to gpu
+  cudaMemcpy(ptr_gpu, ptr_cpu[0], nbytes, cudaMemcpyHostToDevice);
   if (ptr_gpu == NULL) {
     printf("Couldn't allocate GPU memory\n");
   };
@@ -75,16 +92,18 @@ int main() {
   int grid = 1;  // Only 1 block
   // grid and block dimensions
   int grid_dim = 1, block_dim = 2;
-
-  // ! Call kernel function on a 1d-grid 2d-block
-  gpu_array_swap<<<grid, bs>>>(ptr_gpu, nbrows, nbcols, grid_dim, block_dim);
+  gpu_array_swap<<<grid, bs, nbytes>>>(ptr_gpu, nbrows, nbcols, grid_dim,
+                                       block_dim);
 
   //! Copy data from device to host
   cudaDeviceSynchronize();
-  cudaMemcpy(ptr_cpu, ptr_gpu, nbrows * sizeof(int*), cudaMemcpyDeviceToHost);
-  
-  //  show_array(ptr_cpu, nbrows, nbcols);
+  memset(ptr_cpu, 0, nbytes);
+  cudaMemcpy(ptr_cpu[0], ptr_gpu, nbytes, cudaMemcpyDeviceToHost);
+  if (cudaMemcpy(ptr_cpu[0], ptr_gpu, nbytes, cudaMemcpyDeviceToHost) !=
+      cudaSuccess)
+    std::cout << "Fail to copy back to cpu!" << std::endl;
 
+  print_array(ptr_cpu, nbrows, nbcols);
   cudaFree(ptr_gpu);
   free(ptr_cpu);
 }
